@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datatype Converter</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .converter-container {
+            background: var(--card-background);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .select-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .select-group > div {
+            flex: 1;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-weight: 500;
+            width: calc(50% - 0.5rem);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        button.clear {
+            background-color: var(--secondary-color);
+        }
+        
+        button.clear:hover {
+            background-color: #5a6268;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #result-container {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #e9ecef;
+            border-radius: 8px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-wrap: break-word;
+        }
+        
+        #result {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="converter-container">
+        <h1>Datatype Converter</h1>
+        
+        <div class="input-group">
+            <label for="inputValue">Value</label>
+            <input type="text" id="inputValue" placeholder="Enter value">
+        </div>
+
+        <div class="select-group">
+            <div>
+                <label for="fromType">From</label>
+                <select id="fromType">
+                    <option value="binary">Binary</option>
+                    <option value="decimal">Decimal</option>
+                    <option value="hexadecimal">Hexadecimal</option>
+                    <option value="octal">Octal</option>
+                </select>
+            </div>
+            <div>
+                <label for="toType">To</label>
+                <select id="toType">
+                    <option value="binary">Binary</option>
+                    <option value="decimal" selected>Decimal</option>
+                    <option value="hexadecimal">Hexadecimal</option>
+                    <option value="octal">Octal</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button onclick="convert()">Convert</button>
+            <button class="clear" onclick="clearFields()">Clear</button>
+        </div>
+        
+        <div id="result-container">
+            <p id="result"></p>
+        </div>
+    </div>
+
+    <script src="datatypeConverter.js"></script>
+    <script>
+        // --- UI Logic ---
+
+        const conversionMap = {
+            binary: {
+                decimal: binaryToDecimal,
+                hexadecimal: binaryToHexadecimal,
+                octal: binaryToOctal
+            },
+            decimal: {
+                binary: decimalToBinary,
+                hexadecimal: decimalToHexadecimal,
+                octal: decimalToOctal
+            },
+            hexadecimal: {
+                binary: hexadecimalToBinary,
+                decimal: hexadecimalToDecimal,
+                octal: hexadecimalToOctal
+            },
+            octal: {
+                binary: octalToBinary,
+                decimal: octalToDecimal,
+                hexadecimal: octalToHexadecimal
+            }
+        };
+
+        function convert() {
+            const inputValue = document.getElementById('inputValue').value.trim();
+            const fromType = document.getElementById('fromType').value;
+            const toType = document.getElementById('toType').value;
+            const resultElement = document.getElementById('result');
+
+            if (inputValue === '') {
+                resultElement.textContent = 'Please enter a value.';
+                return;
+            }
+
+            if (fromType === toType) {
+                resultElement.textContent = inputValue;
+                return;
+            }
+            
+            try {
+                // Capitalize the 'from' and 'to' types for the function name
+                const fromTypeCap = fromType.charAt(0).toUpperCase() + fromType.slice(1);
+                const toTypeCap = toType.charAt(0).toUpperCase() + toType.slice(1);
+                const functionName = `${fromType}To${toTypeCap}`;
+                
+                // Check if the function exists in the global scope (from the loaded script)
+                if (typeof window[functionName] === 'function') {
+                    const result = window[functionName](inputValue);
+                    resultElement.textContent = result;
+                } else {
+                     resultElement.textContent = 'Conversion function not found.';
+                }
+
+            } catch (error) {
+                resultElement.textContent = 'Invalid input for the selected type.';
+            }
+        }
+        
+        function clearFields() {
+            document.getElementById('inputValue').value = '';
+            document.getElementById('result').textContent = '';
+        }
+
+    </script>
+</body>
+</html>
